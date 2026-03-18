@@ -1,5 +1,7 @@
+require 'jwt'
+
 class JwtService
-  # Replace with a real secret key in production!
+  # Use the Rails secret key base so it's consistent
   SECRET_KEY = Rails.application.credentials.secret_key_base
 
   def self.encode(payload, exp = 24.hours.from_now)
@@ -10,7 +12,8 @@ class JwtService
   def self.decode(token)
     body = JWT.decode(token, SECRET_KEY)[0]
     HashWithIndifferentAccess.new body
-  rescue JWT::DecodeError => e
-    nil # Return nil if the token is invalid or expired
+  rescue JWT::DecodeError => e 
+    Rails.logger.error "JWT Decode Error: #{e.message}"
+    nil # This is what's hitting you!
   end
 end
