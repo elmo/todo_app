@@ -1,1 +1,12 @@
 <div id="root"></div>
+<div id="todo-app" data-token="<%= params[:token] %>"></div>
+
+<script>
+  const appElement = document.getElementById('todo-app');
+  const token = appElement.dataset.token;
+
+  if (token) {
+    localStorage.setItem('jwt_token', token);
+    window.history.replaceState({}, document.title, "/todos");
+  }
+</script>

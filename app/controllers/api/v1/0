@@ -31,21 +31,13 @@ module Api
 
       private
 
-    def authenticate_by_jwt
-      token = token_from_header
-      decoded = ::JwtService.decode(token)
-      if decoded && decoded['user_id']
-        @user = User.find_by(id: decoded['user_id'] )
-         render json: { error: "User not found" }, status: :unauthorized unless @user
-      else
-         render json: { error: "Invalid Token" }, status: :unauthorized
-      end
-     end
+      def authenticate_by_jwt
+          token = session[:jwt]
+          #token = request.headers["Authorization"].to_s.split(" ").last
+          return unless token
 
-      def token_from_header
-        # Looks for "Authorization: Bearer <token>"
-        header = request.headers["Authorization"]
-        header.split(" ").last if header.present?
+          decoded_token = ::JWTService.decode(token)
+          @user = User.find(decoded_token[0]["user_id"])
       end
 
       def todo_params

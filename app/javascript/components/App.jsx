@@ -5,7 +5,7 @@ const App = () => {
   const [newTodo, setNewTodo] = useState("");
 
   useEffect(() => {
-    fetch("/todos")
+    fetch("/api/v1/todos")
       .then((res) => res.json())
       .then((data) => setTodos(data));
   }, []);
@@ -13,8 +13,9 @@ const App = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const csrfToken = document.querySelector('[name="csrf-token"]').content;
   const addTodo = async (e) => {
-	  // 1. Get the token (usually from localStorage or Context)
+    // 1. Get the token (usually from localStorage or Context)
     const token = localStorage.getItem("token");
     if (!token) {
       setError("You must be logged in to add a todo.");
@@ -25,13 +26,16 @@ const App = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/todos", {
+      const response = await fetch("/api/v1/todos", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+	      "Content-Type": "application/json",
+	      'X-CSRF-Token': csrfToken
+      },
       body: JSON.stringify({ 
 	      title: newTodo, 
-	      userId: user.id,
-	      completed: false }),
+	      completed: false 
+      }),
     });
     if (!response.ok) { // 2. Check if the server actually succeeded (e.g., 200 OK)
       throw new Error("Failed to save the todo. Please try again.");
@@ -49,7 +53,7 @@ const App = () => {
 };
 
   const toggleTodo = async (todo) => {
-    await fetch(`/todos/${todo.id}`, {
+    await fetch(`/api/v1/todos/${todo.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !todo.completed }),
