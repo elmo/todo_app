@@ -1,33 +1,31 @@
+# app/controllers/api/v1/users_controller.rb
 module Api
-  module V2
-    class SessionsController < ApplicationController
-      rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
-      rescue_from ActiveRecord::RecordInvalid, with: :record_invalid
+  module V1
+    class UsersController < ApiController
+      # We skip the JWT check because the user doesn't have a token yet!
+      skip_before_action :authenticate_by_jwt, only: [:create]
 
       def create
-        user = User.find_by(email: params[:email])
+        @user = User.new(user_params)
 
-        if user&.authenticate(params[:password])
-          # Issue the token using the Service Object we built
-          token = JwtService.encode(user_id: user.id)
-
+        if @user.save
+          # Create a fresh token for the new user
+          token = JwtService.encode({ user_id: @user.id })
+          
           render json: {
             token: token,
-            user: { id: user.id, email: user.email }
-          }, status: :ok
+            user: { id: @user.id, email: @user.email }
+          }, status: :created
         else
-          render json: { error: "Invalid credentials" }, status: :unauthorized
+          # Return 422 so Axios hits the 'catch' block in React
+          render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
         end
       end
 
-     private
+      private
 
-     def record_not_found(error)
-       render json: { error: error.message }, status: :not_found
-     end
-
-      def record_invalid(error)
-        render json: { errors: error.record.errors.full_messages }, status: :unprocessable_entity
+      def user_params
+        params.require(:user).permit(:email_address, :password, :password_confirmation)
       end
     end
   end
