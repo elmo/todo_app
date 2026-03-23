@@ -96,3 +96,4 @@ bin/rake ci:all
 #### TODO
 exract into gem
 graphql enpoint
+bundle exec rubocop --autocorrect-all --force-exclusion
